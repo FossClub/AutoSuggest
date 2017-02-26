@@ -1,0 +1,130 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+#define ALPHABET_SIZE 26
+struct n
+{
+    bool isEOW;
+    struct n* next[ALPHABET_SIZE];
+};
+typedef struct n node;
+node* createNode()
+{
+    int  i = 0;
+    node* n =(node*)malloc(sizeof(node));
+    n->isEOW = false;
+    for(i=0; i < ALPHABET_SIZE; i++)
+    {
+        n->next[i] = NULL;
+    }
+    return n;
+}
+int showMenu()
+{
+    int ch;
+    printf("Menu\n");
+    printf("===================\n");
+    printf("1.Insert the data\n");
+    printf("2.Auto Suggest Word\n");
+    printf("3.Print All Words\n");
+    printf("4.Exit\n");
+    printf("Your Choice:\n");
+    scanf("%d",&ch);
+    return ch;
+}
+void insertWord(node* root,char word[])
+{
+    int i;
+    int idx;
+    node* temp = root;
+    for(i = 0; i < strlen(word); i++)
+    {
+        idx = word[i]-'a';
+        if(temp->next[idx] == NULL)
+            temp->next[idx] = createNode();
+        temp = temp->next[idx];
+    }
+    temp->isEOW = true;
+
+}
+void printAllWords(node* root,char prefix[])
+{
+    int i;
+    if(root->isEOW == true)
+        printf("%s\n",prefix);
+    for(i = 0; i < ALPHABET_SIZE; i++)
+    {
+        if(root->next[i] != NULL)
+        {
+            char c = i + 'a';
+            int len= strlen(prefix);
+            //declare newPrefix
+            char newPrefix[len+2];
+            sprintf(newPrefix, "%s%c",prefix, c);
+            printAllWords(root->next[i],newPrefix);
+
+        }
+
+    }
+}
+void autoSuggest(node* root,char prefix[])
+{
+    node* temp = root;
+    int i;
+    for(i = 0; prefix[i]!='\0'; i++)
+    {
+        int idx = prefix[i] - 'a';
+        if(temp->next[idx] == NULL )
+        {
+            printf("No words with prefix %s\n",prefix);
+            return;
+        }
+
+
+        temp = temp->next[idx];
+    }
+    printAllWords(temp,prefix);
+}
+int main()
+{
+    node* root = createNode();
+    int ch;
+    FILE* fp = fopen("dictionary.txt","r");
+    if(fp==NULL)
+        printf("Failed to open a file");
+    char word[100];
+    while(!feof(fp))
+    {
+        fscanf(fp, "%s",word);
+        insertWord(root,word);
+    }
+    fclose(fp);
+    while(1)
+    {
+        ch = showMenu();
+
+        switch(ch)
+        {
+        case 1:
+            printf("\nEnter a word:");
+            scanf("%s",word);
+            insertWord(root, word);
+            break;
+        case 2:
+            printf("Enter Prefix:");
+            scanf("%s",word);
+            autoSuggest(root,word);
+            break;
+        case 3:
+            printAllWords(root, "");
+            break;
+        case 4:
+            exit(0);
+        default:
+            printf("Bad choice! Try Again\n");
+
+        }
+    }
+    return 0;
+}
